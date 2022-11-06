@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/cryptonetworking/cryptosig"
-	"github.com/cryptonetworking/kex/utils"
+	"github.com/cryptonetworking/kex/pkg/utils"
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/crypto/nacl/secretbox"
 	"io"

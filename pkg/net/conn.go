@@ -2,7 +2,7 @@ package net
 
 import (
 	"github.com/cryptonetworking/cryptosig"
-	"github.com/cryptonetworking/kex/utils"
+	"github.com/cryptonetworking/kex/pkg/utils"
 	"net"
 	"time"
 )

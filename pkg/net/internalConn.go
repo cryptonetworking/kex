@@ -3,7 +3,7 @@ package net
 import (
 	"github.com/cryptonetworking/cryptosig"
 	"github.com/cryptonetworking/kex/pkg/handshake"
-	"github.com/cryptonetworking/kex/utils"
+	"github.com/cryptonetworking/kex/pkg/utils"
 	encryptedStream "github.com/nknorg/encrypted-stream"
 	"net"
 )
