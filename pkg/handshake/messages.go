@@ -5,15 +5,15 @@ import (
 )
 
 type req struct {
-	ClientEphemeralPublicKey    [32]byte             `json:"epk"`
+	ClientEphemeralPublicKey    [8 + 32]byte         `json:"epk"`
 	ClientPublicKey             *cryptosig.PublicKey `json:"pk"`
 	ClientEphemeralPublicKeySig *cryptosig.Signature `json:"sig"`
-	Deadline                    int                  `json:"deadline"`
 }
 
 type rawRep struct {
 	ServerPublicKey             *cryptosig.PublicKey `json:"pk"`
 	ServerEphemeralPublicKeySig *cryptosig.Signature `json:"sig"`
+	Deadline                    int                  `json:"deadline"`
 }
 
 type secRep struct {

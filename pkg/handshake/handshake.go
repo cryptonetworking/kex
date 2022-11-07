@@ -2,6 +2,7 @@ package handshake
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"github.com/cryptonetworking/cryptosig"
@@ -20,11 +21,13 @@ func Client(conn net.Conn, my *cryptosig.SecretKey) (key []byte, other *cryptosi
 	if err != nil {
 		panic(err)
 	}
+	var epk [40]byte
+	copy(epk[8:], p[:])
+	binary.BigEndian.PutUint64(epk[:8], uint64(time.Now().Unix()+10))
 	if err := Send(conn, utils.Must(json.Marshal(&req{
-		Deadline:                    int(time.Now().Unix()),
-		ClientEphemeralPublicKey:    *p,
+		ClientEphemeralPublicKey:    epk,
 		ClientPublicKey:             my.PublicKey(),
-		ClientEphemeralPublicKeySig: my.Sign(p[:]),
+		ClientEphemeralPublicKeySig: my.Sign(epk[:]),
 	}))); err != nil {
 		return nil, nil, err
 	}
@@ -46,6 +49,9 @@ func Client(conn net.Conn, my *cryptosig.SecretKey) (key []byte, other *cryptosi
 	if err = json.Unmarshal(msg, &raw); err != nil {
 		return nil, nil, err
 	}
+	if raw.Deadline < int(time.Now().Unix()) {
+		return nil, nil, ErrFailed
+	}
 	if err = raw.ServerPublicKey.Verify(raw.ServerEphemeralPublicKeySig, rep.ServerEphemeralPublicKey[:]); err != nil {
 		return nil, nil, err
 	}
@@ -63,7 +69,8 @@ func Server(conn net.Conn, my *cryptosig.SecretKey) (key []byte, other *cryptosi
 	if err := json.Unmarshal(b, &req); err != nil {
 		return nil, nil, err
 	}
-	if req.Deadline < int(time.Now().Unix()) {
+	deadline := int(binary.BigEndian.Uint64(req.ClientEphemeralPublicKey[:8]))
+	if deadline < int(time.Now().Unix()) {
 		return nil, nil, ErrFailed
 	}
 	if err = req.ClientPublicKey.Verify(req.ClientEphemeralPublicKeySig, req.ClientEphemeralPublicKey[:]); err != nil {
@@ -78,8 +85,11 @@ func Server(conn net.Conn, my *cryptosig.SecretKey) (key []byte, other *cryptosi
 		panic(err)
 	}
 	var k [32]byte
-	box.Precompute(&k, &req.ClientEphemeralPublicKey, s)
+	var epk [32]byte
+	copy(epk[:], req.ClientEphemeralPublicKey[8:])
+	box.Precompute(&k, &epk, s)
 	rawRep := rawRep{
+		Deadline:                    int(time.Now().Unix()) + 10,
 		ServerPublicKey:             my.PublicKey(),
 		ServerEphemeralPublicKeySig: my.Sign(p[:]),
 	}
