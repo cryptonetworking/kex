@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/nacl/secretbox"
 	"io"
 	"net"
+	"time"
 )
 
 var MaxPacketSize uint32 = 1000
@@ -20,6 +21,7 @@ func Client(conn net.Conn, my *cryptosig.SecretKey) (key []byte, other *cryptosi
 		panic(err)
 	}
 	if err := Send(conn, utils.Must(json.Marshal(&req{
+		Deadline:                    int(time.Now().Unix()),
 		ClientEphemeralPublicKey:    *p,
 		ClientPublicKey:             my.PublicKey(),
 		ClientEphemeralPublicKeySig: my.Sign(p[:]),
@@ -60,6 +62,9 @@ func Server(conn net.Conn, my *cryptosig.SecretKey) (key []byte, other *cryptosi
 	var req req
 	if err := json.Unmarshal(b, &req); err != nil {
 		return nil, nil, err
+	}
+	if req.Deadline < int(time.Now().Unix()) {
+		return nil, nil, ErrFailed
 	}
 	if err = req.ClientPublicKey.Verify(req.ClientEphemeralPublicKeySig, req.ClientEphemeralPublicKey[:]); err != nil {
 		return nil, nil, err

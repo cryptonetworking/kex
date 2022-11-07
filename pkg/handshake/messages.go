@@ -8,6 +8,7 @@ type req struct {
 	ClientEphemeralPublicKey    [32]byte             `json:"epk"`
 	ClientPublicKey             *cryptosig.PublicKey `json:"pk"`
 	ClientEphemeralPublicKeySig *cryptosig.Signature `json:"sig"`
+	Deadline                    int                  `json:"deadline"`
 }
 
 type rawRep struct {
